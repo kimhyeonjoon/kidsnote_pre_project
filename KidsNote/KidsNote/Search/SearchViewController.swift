@@ -22,51 +22,62 @@ class SearchViewController: UIViewController {
     }
     // search textfield
     lazy var searchTextField = UITextField().then {
-        $0.text = "asd"
+        $0.text = "아이폰"
         $0.textColor = .white
-        $0.clearButtonMode = .whileEditing
         $0.borderStyle = .none
-        $0.font = UIFont.boldSystemFont(ofSize: 25)
-    }
-    
-    // tab
-    lazy var tabView = UIView()
-    // eBook
-    lazy var eBookView = UIView()
-    lazy var eBookLabel = UILabel().then {
-        $0.text = "eBook"
-        $0.textColor = blueColor
-        $0.font = UIFont.boldSystemFont(ofSize: 18)
-    }
-    lazy var eBookLine = UIView().then {
-        $0.backgroundColor = blueColor
-    }
-    lazy var eBookButton = UIButton().then {
-        $0.isSelected = true
+        $0.font = UIFont.boldSystemFont(ofSize: 20)
+        $0.clearButtonMode = .never
         
-        $0.tag = 0
-        $0.addTarget(self, action: #selector(touchTab(_:)), for: .touchUpInside)
+        $0.delegate = self
+        
+        $0.attributedPlaceholder = NSAttributedString(string: "Play 북에서 검색", attributes: [.foregroundColor : grayColor])
+    }
+    // clear button
+    lazy var clearButton = UIButton().then {
+        $0.setImage(UIImage(named: "close"), for: .normal)
+        $0.addTarget(self, action: #selector(touchClear), for: .touchUpInside)
     }
     
-
-    // audio Book
-    lazy var aBookView = UIView()
-    lazy var aBookLabel = UILabel().then {
-        $0.text = "오디오북"
-        $0.textColor = grayColor
-        $0.font = UIFont.boldSystemFont(ofSize: 18)
-    }
-    lazy var aBookLine = UIView().then {
-        $0.backgroundColor = blueColor
-        $0.isHidden = true
-    }
-    lazy var aBookButton = UIButton().then {
-        $0.tag = 1
-        $0.addTarget(self, action: #selector(touchTab(_:)), for: .touchUpInside)
-    }
+    let headerHeight: CGFloat = 100
     
     
     // collection view
+    enum Section {
+        case main
+    }
+    
+    enum Item: Hashable {
+        case item(ItemModel)
+    }
+    
+    private typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
+    private typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
+    private typealias CellProvider = DataSource.CellProvider
+    
+    private lazy var dataSource = makeDataSource()
+    
+    // collection view
+    lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout().then {
+        
+        $0.scrollDirection = .vertical
+        $0.minimumLineSpacing = 20
+        $0.minimumInteritemSpacing = 0
+        
+        $0.sectionInset = .zero
+        $0.headerReferenceSize = CGSize(width: UIScreen.main.bounds.width, height: headerHeight)
+        
+        $0.itemSize = CGSize(width: UIScreen.main.bounds.width, height: 100)
+    }).then {
+        
+        $0.backgroundColor = .clear
+        $0.showsVerticalScrollIndicator = false
+        $0.delegate = self
+        
+        $0.register(SearchCollectionHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: SearchCollectionHeaderView.identifier)
+        $0.register(SearchCollectionCell.self, forCellWithReuseIdentifier: SearchCollectionCell.identifier)
+    }
+    
+    
     
 
     override func viewDidLoad() {
@@ -76,10 +87,25 @@ class SearchViewController: UIViewController {
         setupLayout()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(textFieldDidChange(_:)), name: UITextField.textDidChangeNotification, object: nil)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    
+    
     func setupLayout() {
         
         view.addSubview(headerView)
-        headerView.addSubViews([backButton, searchTextField])
+        headerView.addSubViews([backButton, searchTextField, clearButton])
+        addUnderLine(headerView)
         
         // header
         headerView.snp.makeConstraints {
@@ -88,108 +114,142 @@ class SearchViewController: UIViewController {
             $0.height.equalTo(50)
         }
         backButton.snp.makeConstraints {
-            $0.size.equalTo(50)
-            $0.top.leading.bottom.equalToSuperview()
+            $0.size.equalTo(30)
+            $0.leading.equalToSuperview().inset(16)
+            $0.centerY.equalToSuperview()
         }
         searchTextField.snp.makeConstraints {
-            $0.leading.equalTo(backButton.snp.trailing).offset(25)
+            $0.leading.equalTo(backButton.snp.trailing).offset(16)
             $0.top.bottom.equalToSuperview()
+        }
+        clearButton.snp.makeConstraints {
+            $0.size.equalTo(30)
+            $0.leading.equalTo(searchTextField.snp.trailing).offset(16)
             $0.trailing.equalToSuperview().inset(16)
+            $0.centerY.equalToSuperview()
         }
         
-        // tab
-        view.addSubview(tabView)
-        tabView.addSubViews([eBookView, aBookView])
-        eBookView.addSubViews([eBookLabel, eBookLine, eBookButton])
-        aBookView.addSubViews([aBookLabel, aBookLine, aBookButton])
-        
-        tabView.snp.makeConstraints {
-            $0.top.equalTo(headerView.snp.bottom).offset(10)
-            $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(40)
-        }
-        
-        eBookView.snp.makeConstraints {
-            $0.top.leading.bottom.equalToSuperview()
-            $0.trailing.equalTo(tabView.snp.centerX)
-        }
-        aBookView.snp.makeConstraints {
-            $0.top.trailing.bottom.equalToSuperview()
-            $0.leading.equalTo(tabView.snp.centerX)
-        }
-        
-        
-        // eBook
-        eBookLabel.snp.makeConstraints {
-            $0.center.equalToSuperview()
-        }
-        eBookLine.snp.makeConstraints {
-            $0.centerX.bottom.equalToSuperview()
-            $0.width.equalTo(eBookLabel.snp.width)
-            $0.height.equalTo(2)
-        }
-        eBookButton.snp.makeConstraints {
-            $0.edges.equalToSuperview()
-        }
-        
-        // audio book
-        aBookLabel.snp.makeConstraints {
-            $0.center.equalToSuperview()
-        }
-        aBookLine.snp.makeConstraints {
-            $0.centerX.bottom.equalToSuperview()
-            $0.width.equalTo(aBookLabel.snp.width)
-            $0.height.equalTo(2)
-        }
-        aBookButton.snp.makeConstraints {
-            $0.edges.equalToSuperview()
+        view.addSubview(collectionView)
+        collectionView.snp.makeConstraints {
+            $0.top.equalTo(headerView.snp.bottom)
+            $0.leading.trailing.bottom.equalToSuperview()
         }
     }
     
+    func addUnderLine(_ view: UIView) {
+        
+        let line = UIView().then {
+            $0.backgroundColor = grayColor
+        }
+        
+        view.addSubview(line)
+        line.snp.makeConstraints {
+            $0.leading.trailing.bottom.equalToSuperview()
+            $0.height.equalTo(1)
+        }
+    }
     
-    @objc func touchTab(_ sender: UIButton) {
+    @objc func touchClear() {
+        searchTextField.text = ""
+        clearButton.isHidden = true
+    }
+}
+
+
+// Request
+extension SearchViewController {
+    
+    func requestSearch() {
         
-        print(sender.tag)
+        guard let text = searchTextField.text else { return }
+        guard text != "" else { return }
         
-        eBookButton.isSelected = sender.tag == 0
-        aBookButton.isSelected = sender.tag == 1
+        self.applySnapShot(list: []) {
+            self.collectionView.isHidden = false            
+        }
         
-        eBookLabel.textColor = sender.tag == 0 ? blueColor : grayColor
-        aBookLabel.textColor = sender.tag == 0 ? grayColor : blueColor
-        
-        eBookLine.isHidden = sender.tag == 1
-        aBookLine.isHidden = sender.tag == 0
-        
-        if sender.tag == 0 {
-            // eBook
-            let str = Urls.search(keyword: "꽃").path
-            NetworkManager.shared.request(path: str) { (item: SearchListModel?) in
-                print(item)
-            } failure: { error in
-                print(error)
+        let str = Urls.search(keyword: text).path
+        NetworkManager.shared.request(path: str) { (model: SearchListModel?) in
+            if let model = model, let items = model.items {
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+                    self.applySnapShot(list: items)
+                })
             }
-
-
-        } else {
-            // audio book
+        } failure: { error in
+            print(error)
         }
     }
-
 }
 
-extension UIView {
-    func addSubViews(_ views: [UIView]) {
-        views.forEach { addSubview($0) }
-    }
-}
-
-extension UIColor {
-    convenience init(_ red: Int, _ green: Int, _ blue: Int) {
-        let newRed = CGFloat(red)/255
-        let newGreen = CGFloat(green)/255
-        let newBlue = CGFloat(blue)/255
+// UICollectionView
+extension SearchViewController: UICollectionViewDelegate {
+    
+    private func makeDataSource() -> DataSource {
         
-        self.init(red: newRed, green: newGreen, blue: newBlue, alpha: 1.0)
+        let dataSource = DataSource(collectionView: collectionView) { (collectionView, indexPath, item) -> UICollectionViewCell? in
+                
+            if let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchCollectionCell.identifier, for: indexPath) as? SearchCollectionCell {
+                
+                switch item {
+                case .item(let item):
+                    cell.item = item
+                }
+                return cell
+            }
+            
+            return UICollectionViewCell()
+        }
+        
+        dataSource.supplementaryViewProvider = { collectionView, kind, indexPath in
+            
+            guard kind == UICollectionView.elementKindSectionHeader else { return nil }
+            
+            guard let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: SearchCollectionHeaderView.identifier, for: indexPath) as? SearchCollectionHeaderView else {
+                return SearchCollectionHeaderView()
+            }
+            
+            return headerView
+        }
+        
+        return dataSource
+    }
+    
+    private func applySnapShot(list: [ItemModel], completion: (() -> Void)? = nil) {
+        
+        var snapShot = Snapshot()
+        snapShot.appendSections([.main])
+        
+        let items = list.map { Item.item($0) }
+        snapShot.appendItems(items, toSection: .main)
+        
+        DispatchQueue.main.async {
+            self.dataSource.apply(snapShot, completion: completion)
+        }
     }
 }
 
+// UITextField Delegate
+extension SearchViewController: UITextFieldDelegate {
+    
+    @objc func textFieldDidChange(_ noti: Notification) {
+        collectionView.isHidden = true
+        if let text = searchTextField.text {
+            clearButton.isHidden = text.count < 1
+        }
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        
+        if textField.text?.count ?? 0 < 1 {
+            return false
+        }
+        
+        textField.resignFirstResponder()
+        
+        // search
+        self.requestSearch()
+        
+        return true
+    }
+}

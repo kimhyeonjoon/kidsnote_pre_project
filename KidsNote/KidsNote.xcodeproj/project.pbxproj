@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		480F9C392B59164800177736 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480F9C382B59164800177736 /* Extensions.swift */; };
+		480F9C3B2B591DAF00177736 /* SearchCollectionHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480F9C3A2B591DAF00177736 /* SearchCollectionHeaderView.swift */; };
 		48A1F4B02B579C3700445D88 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A1F4AF2B579C3700445D88 /* AppDelegate.swift */; };
 		48A1F4B22B579C3700445D88 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A1F4B12B579C3700445D88 /* SceneDelegate.swift */; };
 		48A1F4B42B579C3700445D88 /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A1F4B32B579C3700445D88 /* SearchViewController.swift */; };
@@ -22,6 +24,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		480F9C382B59164800177736 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		480F9C3A2B591DAF00177736 /* SearchCollectionHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCollectionHeaderView.swift; sourceTree = "<group>"; };
 		48A1F4AC2B579C3700445D88 /* kidsnote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = kidsnote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		48A1F4AF2B579C3700445D88 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		48A1F4B12B579C3700445D88 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -70,6 +74,7 @@
 			children = (
 				48A1F4AF2B579C3700445D88 /* AppDelegate.swift */,
 				48A1F4B12B579C3700445D88 /* SceneDelegate.swift */,
+				480F9C382B59164800177736 /* Extensions.swift */,
 				48A1F4D12B57B25A00445D88 /* Network */,
 				48A1F4CD2B57B22900445D88 /* Search */,
 				48A1F4CE2B57B23300445D88 /* Detail */,
@@ -84,6 +89,7 @@
 			isa = PBXGroup;
 			children = (
 				48A1F4B32B579C3700445D88 /* SearchViewController.swift */,
+				480F9C3A2B591DAF00177736 /* SearchCollectionHeaderView.swift */,
 				48A1F4CF2B57B25300445D88 /* SearchCollectionCell.swift */,
 			);
 			path = Search;
@@ -193,7 +199,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				480F9C3B2B591DAF00177736 /* SearchCollectionHeaderView.swift in Sources */,
 				48A1F4B42B579C3700445D88 /* SearchViewController.swift in Sources */,
+				480F9C392B59164800177736 /* Extensions.swift in Sources */,
 				48A1F4B02B579C3700445D88 /* AppDelegate.swift in Sources */,
 				48A1F4D82B57BEE100445D88 /* ItemModel.swift in Sources */,
 				48A1F4B22B579C3700445D88 /* SceneDelegate.swift in Sources */,

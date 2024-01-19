@@ -7,7 +7,8 @@
 
 import Foundation
 
-struct ItemModel: Decodable {
+struct ItemModel: Decodable, Hashable {
+    
     var kind: String?
     var id: String?
     var etag: String?
@@ -15,6 +16,15 @@ struct ItemModel: Decodable {
     var volumeInfo: VolumeInfo?
     var saleInfo: SaleInfo?
     var accessInfo: AccessInfo?
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(kind)
+        hasher.combine(id)
+    }
+    
+    static func == (lhs: ItemModel, rhs: ItemModel) -> Bool {
+        return lhs.kind == rhs.kind && lhs.id == rhs.id
+    }
 }
 
 // Volume Info
