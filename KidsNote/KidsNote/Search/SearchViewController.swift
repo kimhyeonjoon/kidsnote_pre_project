@@ -26,7 +26,7 @@ class SearchViewController: UIViewController {
     }
     // search textfield
     lazy var searchTextField = UITextField().then {
-        $0.text = "게이고"
+        $0.text = "아이폰"
         $0.textColor = .white
         $0.borderStyle = .none
         $0.font = UIFont.boldSystemFont(ofSize: 18)
@@ -64,6 +64,8 @@ class SearchViewController: UIViewController {
         
         $0.headerReferenceSize = CGSize(width: UIScreen.main.bounds.width, height: 100)
         $0.itemSize = CGSize(width: UIScreen.main.bounds.width, height: 100)
+        
+        $0.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 100, right: 0)
     }).then {
         
         $0.backgroundColor = .clear
@@ -86,6 +88,9 @@ class SearchViewController: UIViewController {
         $0.color = grayColor
     }
     
+    // current page index
+    var startIndex = 0
+    var totalItems: Int?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -94,12 +99,6 @@ class SearchViewController: UIViewController {
         setupLayout()
         view.backgroundColor = .black
         self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
-        
-        
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
-            self.requestSearch()
-        })
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -107,7 +106,6 @@ class SearchViewController: UIViewController {
         
         self.navigationController?.navigationBar.isHidden = true
         NotificationCenter.default.addObserver(self, selector: #selector(textFieldDidChange(_:)), name: UITextField.textDidChangeNotification, object: nil)
-        
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -162,6 +160,7 @@ class SearchViewController: UIViewController {
     }
     
     @objc func refresh(_ refresh: UIRefreshControl) {
+        startIndex = 0
         self.requestSearch(isRefresh: true)
     }
     
@@ -175,6 +174,17 @@ class SearchViewController: UIViewController {
         }
         
         view.layoutIfNeeded()
+    }
+    
+    func showMoreLoadingView() {
+        indicator.startAnimating()
+        indicator.snp.updateConstraints {
+            $0.top.equalTo(collectionView.snp.bottom).offset(-80)
+        }
+        
+        UIView.animate(withDuration: 0.25) {
+            self.view.layoutIfNeeded()
+        }
     }
     
     func hideLoadingView() {
@@ -209,22 +219,45 @@ extension SearchViewController {
             }
         }
         
-        let path = Urls.search(keyword: text).path
+        let path = Urls.search(startIndex: "\(startIndex)", keyword: text).path
         NetworkManager.shared.request(path: path) { (model: SearchListModel?) in
+            
+            self.totalItems = model?.totalItems
+            
             if let model = model, let items = model.items {
-                
-                DispatchQueue.main.asyncAfter(deadline: .now(), execute: {
-                    self.applySnapShot(items: items)
-                    if self.refreshControl.isRefreshing {
-                        self.refreshControl.endRefreshing()                        
-                    }
-                    self.hideLoadingView()
-                })
+                self.applySnapShot(items: items)
+                if self.refreshControl.isRefreshing {
+                    self.refreshControl.endRefreshing()
+                }
+                self.hideLoadingView()
             }
+            
         } failure: { error in
             print(error)
+            self.hideLoadingView()
+        }
+    }
+    
+    func requestSearchMore() {
+        
+        guard let text = searchTextField.text else { return }
+        guard text != "" else { return }
+        
+        let path = Urls.search(startIndex: "\(startIndex)", keyword: text).path
+        NetworkManager.shared.request(path: path) { (model: SearchListModel?) in
             
+            self.totalItems = model?.totalItems
             
+            if let model = model, let items = model.items {
+                self.applyMoreSnapShot(items: items)
+                if self.refreshControl.isRefreshing {
+                    self.refreshControl.endRefreshing()
+                }
+                self.hideLoadingView()
+            }
+            
+        } failure: { error in
+            print(error)
             self.hideLoadingView()
         }
     }
@@ -274,6 +307,16 @@ extension SearchViewController: UICollectionViewDelegate {
         }
     }
     
+    private func applyMoreSnapShot(items: [ItemModel]) {
+        
+        var snapShot = dataSource.snapshot()
+        
+        snapShot.appendItems(items, toSection: .main)
+        DispatchQueue.main.async {
+            self.dataSource.apply(snapShot)
+        }
+    }
+    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
         if let item = dataSource.itemIdentifier(for: indexPath) {
@@ -307,5 +350,19 @@ extension SearchViewController: UITextFieldDelegate {
         self.requestSearch()
         
         return true
+    }
+}
+
+extension SearchViewController: UIScrollViewDelegate {
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if (scrollView.contentOffset.y + UIScreen.main.bounds.height + 50) > scrollView.contentSize.height {
+            if indicator.isAnimating == false && refreshControl.isRefreshing == false, self.totalItems ?? 0 > (startIndex + 10)  {
+                print("more")
+                showMoreLoadingView()
+                startIndex += 40
+                requestSearchMore()
+            }
+        }
     }
 }

@@ -15,14 +15,14 @@ public typealias ApiImageSuccess = ( _ image: UIImage ) -> Void
 public typealias ApiFail = ( _ error: Error ) -> Void
 
 enum Urls {
-    case search(keyword: String)
+    case search(startIndex: String, keyword: String)
     case detail(volumeId: String)
     
     var path: String {
         switch self {
-        case .search(let keyword):
+        case let .search(startIndex, keyword):
             guard let query = keyword.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return "" }
-            return "https://www.googleapis.com/books/v1/volumes?q=\(query)&key=\(apiKey)"
+            return "https://www.googleapis.com/books/v1/volumes?q=\(query)&startIndex=\(startIndex)&maxResults=40&key=\(apiKey)"
         case .detail(let volumeId):
             return "https://www.googleapis.com/books/v1/volumes/\(volumeId)?key=\(apiKey)"
         }
@@ -44,7 +44,9 @@ class NetworkManager {
         URLSession.shared.dataTask(with: request) { data, response, error in
             
             guard let response = response as? HTTPURLResponse, (200 ..< 300) ~= response.statusCode else {
-                failure(self.commonError(msg: "Error: HTTP request failed"))
+                DispatchQueue.main.async {
+                    failure(self.commonError(msg: "Error: HTTP request failed"))
+                }
                 return
             }
             
@@ -73,13 +75,17 @@ class NetworkManager {
     func requestImage(path: String, completed:@escaping ApiImageSuccess, failure:@escaping ApiFail) {
         
         guard let url = URL(string: path) else {
-            failure(self.commonError(msg: "Error: image url"))
+            DispatchQueue.main.async {
+                failure(self.commonError(msg: "Error: image url"))
+            }
             return
         }
         
         // image cache
         if let image = ImageCacheManager.shared.object(forKey: path as NSString) {
-            completed(image)
+            DispatchQueue.main.async {
+                completed(image)
+            }
             return
         }
         
