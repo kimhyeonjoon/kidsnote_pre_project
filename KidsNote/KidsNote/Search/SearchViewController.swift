@@ -15,7 +15,18 @@ let grayColor = UIColor.lightGray
 class SearchViewController: UIViewController {
     
     // header
-    lazy var headerView = UIView()
+    lazy var headerView = UIView().then {
+        
+        let line = UIView().then {
+            $0.backgroundColor = grayColor
+        }
+        
+        $0.addSubview(line)
+        line.snp.makeConstraints {
+            $0.leading.trailing.bottom.equalToSuperview()
+            $0.height.equalTo(1)
+        }
+    }
     // back button
     lazy var backButton = UIButton().then {
         $0.setImage(UIImage(named: "back"), for: .normal)
@@ -37,8 +48,6 @@ class SearchViewController: UIViewController {
         $0.setImage(UIImage(named: "close"), for: .normal)
         $0.addTarget(self, action: #selector(touchClear), for: .touchUpInside)
     }
-    
-    let headerHeight: CGFloat = 100
     
     
     // collection view
@@ -77,14 +86,26 @@ class SearchViewController: UIViewController {
         $0.register(SearchCollectionCell.self, forCellWithReuseIdentifier: SearchCollectionCell.identifier)
     }
     
+    // refresh control
+    lazy var refreshControl = UIRefreshControl().then {
+        $0.tintColor = grayColor
+        $0.addTarget(self, action: #selector(refresh(_:)), for: .valueChanged)
+        collectionView.refreshControl = $0
+    }
     
+    // loading indicator
+    lazy var indicator = UIActivityIndicatorView().then {
+        $0.color = grayColor
+    }
     
-
+    let headerHeight: CGFloat = 100
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         navigationController?.navigationBar.isHidden = true
         setupLayout()
+//        initRefreshControl()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -99,13 +120,10 @@ class SearchViewController: UIViewController {
         NotificationCenter.default.removeObserver(self)
     }
     
-    
-    
     func setupLayout() {
         
         view.addSubview(headerView)
         headerView.addSubViews([backButton, searchTextField, clearButton])
-        addUnderLine(headerView)
         
         // header
         headerView.snp.makeConstraints {
@@ -129,29 +147,51 @@ class SearchViewController: UIViewController {
             $0.centerY.equalToSuperview()
         }
         
+        // collection view
         view.addSubview(collectionView)
         collectionView.snp.makeConstraints {
             $0.top.equalTo(headerView.snp.bottom)
             $0.leading.trailing.bottom.equalToSuperview()
         }
+        
+        // loading indicator
+        view.addSubview(indicator)
     }
     
-    func addUnderLine(_ view: UIView) {
-        
-        let line = UIView().then {
-            $0.backgroundColor = grayColor
-        }
-        
-        view.addSubview(line)
-        line.snp.makeConstraints {
-            $0.leading.trailing.bottom.equalToSuperview()
-            $0.height.equalTo(1)
-        }
-    }
     
     @objc func touchClear() {
         searchTextField.text = ""
         clearButton.isHidden = true
+    }
+    
+    @objc func refresh(_ refresh: UIRefreshControl) {
+        self.requestSearch(isRefresh: true)
+    }
+    
+    func showLoadingView() {
+        indicator.startAnimating()
+        indicator.snp.remakeConstraints {
+            $0.size.equalTo(30)
+            $0.centerX.equalToSuperview()
+            $0.top.equalTo(collectionView.snp.top).inset(120)
+        }
+        
+        view.layoutIfNeeded()
+    }
+    
+    func hideLoadingView() {
+        
+        indicator.snp.remakeConstraints {
+            $0.size.equalTo(30)
+            $0.centerX.equalToSuperview()
+            $0.top.equalTo(collectionView.snp.bottom)
+        }
+        
+        UIView.animate(withDuration: 0.25) {
+            self.view.layoutIfNeeded()
+        } completion: { _ in
+            self.indicator.stopAnimating()
+        }
     }
 }
 
@@ -159,13 +199,16 @@ class SearchViewController: UIViewController {
 // Request
 extension SearchViewController {
     
-    func requestSearch() {
+    func requestSearch(isRefresh: Bool = false) {
         
         guard let text = searchTextField.text else { return }
         guard text != "" else { return }
         
-        self.applySnapShot(list: []) {
-            self.collectionView.isHidden = false            
+        if isRefresh == false {
+            self.applySnapShot(list: []) {
+                self.collectionView.isHidden = false
+                self.showLoadingView()
+            }
         }
         
         let str = Urls.search(keyword: text).path
@@ -174,6 +217,10 @@ extension SearchViewController {
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
                     self.applySnapShot(list: items)
+                    if self.refreshControl.isRefreshing {
+                        self.refreshControl.endRefreshing()                        
+                    }
+                    self.hideLoadingView()
                 })
             }
         } failure: { error in
