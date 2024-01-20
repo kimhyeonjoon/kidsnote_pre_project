@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		480F9C392B59164800177736 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480F9C382B59164800177736 /* Extensions.swift */; };
 		480F9C3B2B591DAF00177736 /* SearchCollectionHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480F9C3A2B591DAF00177736 /* SearchCollectionHeaderView.swift */; };
+		486B091B2B5B8B6A0066EAC8 /* DescriptionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486B091A2B5B8B6A0066EAC8 /* DescriptionViewController.swift */; };
 		48A1F4B02B579C3700445D88 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A1F4AF2B579C3700445D88 /* AppDelegate.swift */; };
 		48A1F4B22B579C3700445D88 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A1F4B12B579C3700445D88 /* SceneDelegate.swift */; };
 		48A1F4B42B579C3700445D88 /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A1F4B32B579C3700445D88 /* SearchViewController.swift */; };
@@ -26,6 +27,7 @@
 /* Begin PBXFileReference section */
 		480F9C382B59164800177736 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		480F9C3A2B591DAF00177736 /* SearchCollectionHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCollectionHeaderView.swift; sourceTree = "<group>"; };
+		486B091A2B5B8B6A0066EAC8 /* DescriptionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptionViewController.swift; sourceTree = "<group>"; };
 		48A1F4AC2B579C3700445D88 /* kidsnote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = kidsnote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		48A1F4AF2B579C3700445D88 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		48A1F4B12B579C3700445D88 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -99,6 +101,7 @@
 			isa = PBXGroup;
 			children = (
 				48A1F4C52B579D0200445D88 /* DetailViewController.swift */,
+				486B091A2B5B8B6A0066EAC8 /* DescriptionViewController.swift */,
 			);
 			path = Detail;
 			sourceTree = "<group>";
@@ -207,6 +210,7 @@
 				48A1F4B22B579C3700445D88 /* SceneDelegate.swift in Sources */,
 				48A1F4D62B57B32300445D88 /* NetworkManager.swift in Sources */,
 				48A1F4D42B57B26C00445D88 /* SearchModel.swift in Sources */,
+				486B091B2B5B8B6A0066EAC8 /* DescriptionViewController.swift in Sources */,
 				48A1F4C62B579D0300445D88 /* DetailViewController.swift in Sources */,
 				48A1F4D02B57B25300445D88 /* SearchCollectionCell.swift in Sources */,
 			);
@@ -276,7 +280,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -330,7 +334,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -347,6 +351,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = X5E946JK54;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = kidsnote/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -375,6 +380,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = X5E946JK54;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = kidsnote/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

@@ -10,33 +10,26 @@ import SnapKit
 import Then
 
 let blueColor = UIColor(135, 206, 235)
-let grayColor = UIColor.lightGray
+let grayColor = UIColor(170, 170, 170)
 
 class SearchViewController: UIViewController {
     
     // header
     lazy var headerView = UIView().then {
-        
-        let line = UIView().then {
-            $0.backgroundColor = grayColor
-        }
-        
-        $0.addSubview(line)
-        line.snp.makeConstraints {
-            $0.leading.trailing.bottom.equalToSuperview()
-            $0.height.equalTo(1)
-        }
+        $0.addSeparatorLine()
     }
     // back button
     lazy var backButton = UIButton().then {
-        $0.setImage(UIImage(named: "back"), for: .normal)
+        $0.setTitle("<", for: .normal)
+        $0.setTitleColor(grayColor, for: .normal)
+        $0.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
     }
     // search textfield
     lazy var searchTextField = UITextField().then {
-        $0.text = "아이폰"
+        $0.text = "게이고"
         $0.textColor = .white
         $0.borderStyle = .none
-        $0.font = UIFont.boldSystemFont(ofSize: 20)
+        $0.font = UIFont.boldSystemFont(ofSize: 18)
         $0.clearButtonMode = .never
         
         $0.delegate = self
@@ -45,7 +38,9 @@ class SearchViewController: UIViewController {
     }
     // clear button
     lazy var clearButton = UIButton().then {
-        $0.setImage(UIImage(named: "close"), for: .normal)
+        $0.setTitle("X", for: .normal)
+        $0.setTitleColor(grayColor, for: .normal)
+        $0.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
         $0.addTarget(self, action: #selector(touchClear), for: .touchUpInside)
     }
     
@@ -55,12 +50,8 @@ class SearchViewController: UIViewController {
         case main
     }
     
-    enum Item: Hashable {
-        case item(ItemModel)
-    }
-    
-    private typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
-    private typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
+    private typealias DataSource = UICollectionViewDiffableDataSource<Section, ItemModel>
+    private typealias Snapshot = NSDiffableDataSourceSnapshot<Section, ItemModel>
     private typealias CellProvider = DataSource.CellProvider
     
     private lazy var dataSource = makeDataSource()
@@ -69,12 +60,9 @@ class SearchViewController: UIViewController {
     lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout().then {
         
         $0.scrollDirection = .vertical
-        $0.minimumLineSpacing = 20
-        $0.minimumInteritemSpacing = 0
+        $0.minimumLineSpacing = 10
         
-        $0.sectionInset = .zero
-        $0.headerReferenceSize = CGSize(width: UIScreen.main.bounds.width, height: headerHeight)
-        
+        $0.headerReferenceSize = CGSize(width: UIScreen.main.bounds.width, height: 100)
         $0.itemSize = CGSize(width: UIScreen.main.bounds.width, height: 100)
     }).then {
         
@@ -98,26 +86,35 @@ class SearchViewController: UIViewController {
         $0.color = grayColor
     }
     
-    let headerHeight: CGFloat = 100
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        navigationController?.navigationBar.isHidden = true
+        
         setupLayout()
-//        initRefreshControl()
+        view.backgroundColor = .black
+        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+        
+        
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+            self.requestSearch()
+        })
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        self.navigationController?.navigationBar.isHidden = true
         NotificationCenter.default.addObserver(self, selector: #selector(textFieldDidChange(_:)), name: UITextField.textDidChangeNotification, object: nil)
+        
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
         NotificationCenter.default.removeObserver(self)
+        self.navigationController?.navigationBar.isHidden = false
     }
     
     func setupLayout() {
@@ -168,6 +165,7 @@ class SearchViewController: UIViewController {
         self.requestSearch(isRefresh: true)
     }
     
+    // Indicator
     func showLoadingView() {
         indicator.startAnimating()
         indicator.snp.remakeConstraints {
@@ -205,18 +203,18 @@ extension SearchViewController {
         guard text != "" else { return }
         
         if isRefresh == false {
-            self.applySnapShot(list: []) {
+            self.applySnapShot(items: []) {
                 self.collectionView.isHidden = false
                 self.showLoadingView()
             }
         }
         
-        let str = Urls.search(keyword: text).path
-        NetworkManager.shared.request(path: str) { (model: SearchListModel?) in
+        let path = Urls.search(keyword: text).path
+        NetworkManager.shared.request(path: path) { (model: SearchListModel?) in
             if let model = model, let items = model.items {
                 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
-                    self.applySnapShot(list: items)
+                DispatchQueue.main.asyncAfter(deadline: .now(), execute: {
+                    self.applySnapShot(items: items)
                     if self.refreshControl.isRefreshing {
                         self.refreshControl.endRefreshing()                        
                     }
@@ -225,6 +223,9 @@ extension SearchViewController {
             }
         } failure: { error in
             print(error)
+            
+            
+            self.hideLoadingView()
         }
     }
 }
@@ -238,10 +239,7 @@ extension SearchViewController: UICollectionViewDelegate {
                 
             if let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchCollectionCell.identifier, for: indexPath) as? SearchCollectionCell {
                 
-                switch item {
-                case .item(let item):
-                    cell.item = item
-                }
+                cell.item = item
                 return cell
             }
             
@@ -250,7 +248,9 @@ extension SearchViewController: UICollectionViewDelegate {
         
         dataSource.supplementaryViewProvider = { collectionView, kind, indexPath in
             
-            guard kind == UICollectionView.elementKindSectionHeader else { return nil }
+            guard kind == UICollectionView.elementKindSectionHeader else {
+                return nil
+            }
             
             guard let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: SearchCollectionHeaderView.identifier, for: indexPath) as? SearchCollectionHeaderView else {
                 return SearchCollectionHeaderView()
@@ -262,16 +262,25 @@ extension SearchViewController: UICollectionViewDelegate {
         return dataSource
     }
     
-    private func applySnapShot(list: [ItemModel], completion: (() -> Void)? = nil) {
+    private func applySnapShot(items: [ItemModel], completion: (() -> Void)? = nil) {
         
         var snapShot = Snapshot()
         snapShot.appendSections([.main])
         
-        let items = list.map { Item.item($0) }
         snapShot.appendItems(items, toSection: .main)
         
         DispatchQueue.main.async {
             self.dataSource.apply(snapShot, completion: completion)
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
+        if let item = dataSource.itemIdentifier(for: indexPath) {
+            let vc = DetailViewController()
+            vc.volumeId = item.id ?? ""
+            
+            self.navigationController?.pushViewController(vc, animated: true)
         }
     }
 }
