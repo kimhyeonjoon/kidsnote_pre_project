@@ -26,7 +26,7 @@ class SearchViewController: UIViewController {
     }
     // search textfield
     lazy var searchTextField = UITextField().then {
-        $0.text = "아이폰"
+        $0.text = ""
         $0.textColor = .white
         $0.borderStyle = .none
         $0.font = UIFont.boldSystemFont(ofSize: 18)
@@ -39,6 +39,7 @@ class SearchViewController: UIViewController {
     // clear button
     lazy var clearButton = UIButton().then {
         $0.setTitle("X", for: .normal)
+        $0.isHidden = true
         $0.setTitleColor(grayColor, for: .normal)
         $0.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
         $0.addTarget(self, action: #selector(touchClear), for: .touchUpInside)
@@ -89,8 +90,8 @@ class SearchViewController: UIViewController {
     }
     
     // current page index
-    var startIndex = 0
-    var totalItems: Int?
+    private var startIndex = 0
+    private var totalItems: Int?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -151,6 +152,11 @@ class SearchViewController: UIViewController {
         
         // loading indicator
         view.addSubview(indicator)
+        indicator.snp.makeConstraints {
+            $0.size.equalTo(30)
+            $0.centerX.equalToSuperview()
+            $0.top.equalTo(collectionView.snp.bottom)
+        }
     }
     
     
@@ -165,33 +171,19 @@ class SearchViewController: UIViewController {
     }
     
     // Indicator
-    func showLoadingView() {
+    private func showLoadingView(isMore: Bool = false) {
         indicator.startAnimating()
-        indicator.snp.remakeConstraints {
-            $0.size.equalTo(30)
-            $0.centerX.equalToSuperview()
-            $0.top.equalTo(collectionView.snp.top).inset(120)
+        let offsetY = isMore ? 80 : collectionView.bounds.height - 120
+        indicator.snp.updateConstraints {
+            $0.top.equalTo(collectionView.snp.bottom).offset(-offsetY)
         }
         
         view.layoutIfNeeded()
     }
     
-    func showMoreLoadingView() {
-        indicator.startAnimating()
+    private func hideLoadingView() {
+        
         indicator.snp.updateConstraints {
-            $0.top.equalTo(collectionView.snp.bottom).offset(-80)
-        }
-        
-        UIView.animate(withDuration: 0.25) {
-            self.view.layoutIfNeeded()
-        }
-    }
-    
-    func hideLoadingView() {
-        
-        indicator.snp.remakeConstraints {
-            $0.size.equalTo(30)
-            $0.centerX.equalToSuperview()
             $0.top.equalTo(collectionView.snp.bottom)
         }
         
@@ -207,7 +199,7 @@ class SearchViewController: UIViewController {
 // Request
 extension SearchViewController {
     
-    func requestSearch(isRefresh: Bool = false) {
+    private func requestSearch(isRefresh: Bool = false) {
         
         guard let text = searchTextField.text else { return }
         guard text != "" else { return }
@@ -238,7 +230,7 @@ extension SearchViewController {
         }
     }
     
-    func requestSearchMore() {
+    private func requestSearchMore() {
         
         guard let text = searchTextField.text else { return }
         guard text != "" else { return }
@@ -357,9 +349,8 @@ extension SearchViewController: UIScrollViewDelegate {
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         if (scrollView.contentOffset.y + UIScreen.main.bounds.height + 50) > scrollView.contentSize.height {
-            if indicator.isAnimating == false && refreshControl.isRefreshing == false, self.totalItems ?? 0 > (startIndex + 10)  {
-                print("more")
-                showMoreLoadingView()
+            if indicator.isAnimating == false && refreshControl.isRefreshing == false, self.totalItems ?? 0 > (startIndex + 40)  {
+                showLoadingView(isMore: true)
                 startIndex += 40
                 requestSearchMore()
             }

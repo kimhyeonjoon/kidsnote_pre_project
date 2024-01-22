@@ -13,7 +13,7 @@ class DescriptionViewController: UIViewController {
         $0.isSelectable = false
         
         $0.textColor = grayColor
-        $0.font = UIFont.systemFont(ofSize: 12)
+        $0.font = UIFont.systemFont(ofSize: 14)
         $0.backgroundColor = .black
         $0.textContainerInset = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
     }
@@ -38,7 +38,7 @@ class DescriptionViewController: UIViewController {
     func setupLayout() {
         view.addSubview(textView)
         textView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
+            $0.edges.equalTo(view.safeAreaLayoutGuide)
         }
     }
     
@@ -46,6 +46,4 @@ class DescriptionViewController: UIViewController {
         navigationItem.title = item?.volumeInfo?.title
         textView.attributedText = item?.descriptionText()
     }
-
-    
 }

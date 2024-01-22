@@ -22,7 +22,7 @@ enum Urls {
         switch self {
         case let .search(startIndex, keyword):
             guard let query = keyword.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return "" }
-            return "https://www.googleapis.com/books/v1/volumes?q=\(query)&startIndex=\(startIndex)&maxResults=40&key=\(apiKey)"
+            return "https://www.googleapis.com/books/v1/volumes?q=\(query)&startIndex=\(startIndex)&maxResults=40&filter=ebooks&key=\(apiKey)"
         case .detail(let volumeId):
             return "https://www.googleapis.com/books/v1/volumes/\(volumeId)?key=\(apiKey)"
         }
